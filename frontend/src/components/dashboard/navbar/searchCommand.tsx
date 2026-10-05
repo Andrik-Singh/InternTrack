@@ -1,0 +1,52 @@
+'use client'
+
+import {
+    Command,
+    CommandDialog,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+    CommandSeparator,
+    CommandShortcut,
+} from "@/components/ui/command"
+import { useEffect, useState } from "react"
+
+const searchCommand = () => {
+    const [open, setOpen] = useState(false)
+    useEffect(() => {
+        const changeCommand = () => {
+            setOpen(!open)
+        }
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+                changeCommand()
+            }
+        })
+        return (() => {
+            window.removeEventListener('keydown', changeCommand)
+        })
+    })
+    return (
+        <Command>
+            <CommandInput placeholder="Type a command or search..." />
+            <CommandList>
+                <CommandEmpty>No results found.</CommandEmpty>
+                <CommandGroup heading="Suggestions">
+                    <CommandItem>Calendar</CommandItem>
+                    <CommandItem>Search Emoji</CommandItem>
+                    <CommandItem>Calculator</CommandItem>
+                </CommandGroup>
+                <CommandSeparator />
+                <CommandGroup heading="Settings">
+                    <CommandItem>Profile</CommandItem>
+                    <CommandItem>Billing</CommandItem>
+                    <CommandItem>Settings</CommandItem>
+                </CommandGroup>
+            </CommandList>
+        </Command>
+    )
+}
+
+export default searchCommand
