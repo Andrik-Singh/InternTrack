@@ -1,7 +1,13 @@
 import { createUserSchema } from 'src/auth/dto/createUser-dto';
 import { z } from 'zod';
 export const createCompanySchema = z.object({
-  companyName: z.string().min(1, { error: 'Name is required' }),
+  companyName: z
+    .string()
+    .min(1, { error: 'Name is required' })
+    .regex(
+      /^[A-Za-z\s'-]+$/,
+      'Only letters, spaces, hyphens and apostrophes allowed',
+    ),
   description: z.string().min(1, { error: 'Description is required' }),
   website: z.string().url({ error: 'Website is required' }),
   address: z.string().min(1, { error: 'Address is required' }),

@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import type { Response } from 'express';
 import type { CreateUserDto } from './dto/createUser-dto';
@@ -44,6 +44,13 @@ export class AuthController {
     return {
       message: 'Succesfully signed in',
       userId: id,
+    };
+  }
+  @Post('logout')
+  logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('token');
+    return {
+      message: 'Succesfully signed out',
     };
   }
 }

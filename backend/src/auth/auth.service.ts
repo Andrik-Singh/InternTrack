@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto, createUserSchema } from './dto/createUser-dto';
 import { InjectDrizzle } from '@nestjs/drizzle';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
@@ -10,6 +14,9 @@ import { handleDatabaseError } from 'src/common/drizzleError';
 import { JwtService } from '@nestjs/jwt';
 import { type SigninUserDto } from './dto/signinUser.dto';
 import { eq } from 'drizzle-orm';
+import { Request } from 'express';
+type Uuid = `${string}-${string}-${string}-${string}-${string}`;
+type TokenPayload = { sub: Uuid; role: 'ADMIN' | 'INTERN' | 'MENTOR' };
 @Injectable()
 export class AuthService {
   constructor(
@@ -58,6 +65,25 @@ export class AuthService {
       throw new InternalServerErrorException('JWT is not working');
     }
   }
+  async verifyToken(req: Request): Promise<TokenPayload> {
+    const token = req.cookies.token as string | undefined;
+    if (!token) {
+      throw new UnauthorizedException('Authentication required');
+    }
+    try {
+      const payload = await this.jwtService.verifyAsync<TokenPayload>(token);
+      if (!payload.sub) {
+        throw new Error('Malformed token');
+      }
+      return payload;
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+  }
+
   async signIn(payload: SigninUserDto): Promise<{
     token: string;
     id: string;
@@ -77,10 +103,10 @@ export class AuthService {
     try {
       isValid = await bcrypt.compare(password, passwordHash);
       if (!isValid) {
-        throw new WrongPasswordException('Invalid credentials');
+        throw new WrongPasswordException('Wrong Password or Email');
       }
     } catch (e) {
-      if(e instanceof WrongPasswordException) {
+      if (e instanceof WrongPasswordException) {
         throw e;
       }
       throw new InternalServerErrorException('Bcrypt is not working');
@@ -96,6 +122,5 @@ export class AuthService {
   }
   forgetPassword() {}
   resetPassword() {}
-  signOut() {}
   verifyEmail() {}
 }

@@ -1,5 +1,4 @@
 'use client'
-
 import { CreateCompany, fullNewCompanySchema } from "@/zod/auth/createCompany";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useState } from "react";
@@ -7,7 +6,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import CreateCompanyForm from "./createCompanyform";
 import CreateNewUser from "./createNewUser";
 import { toast } from "sonner";
-import { config } from "@/lib/utils";
+import { config } from "@/lib/config";
 import { logger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
 
@@ -19,6 +18,7 @@ export default function CreateCompanyWrapper() {
     resolver: zodResolver(fullNewCompanySchema),
     mode: 'onTouched'
   })
+  const {setError}=methods
   const changeFormState = useCallback((nextState: 'company' | 'user') => {
     setCurrentForm(nextState);
   }, [setCurrentForm]);
@@ -54,14 +54,23 @@ export default function CreateCompanyWrapper() {
       })
       if (!res.ok) {
         const error = await res.json()
+        const statusCode = res.status
+        if (statusCode === 409) {
+          setError("email", {
+            type:"server",
+            message:"Email is already used"
+          }, {
+            shouldFocus:true
+          })
+        }
         throw new Error(error.message)
       }
       const responseData = await res.json();
       if (responseData) {
         router.push('/dashboard')
-
       }
     } catch (e) {
+      toast.error(e instanceof Error ? e.message : typeof e === "string" ? e : "Server error try again later");
       logger.error(e)
     } finally {
       setCurrentAbortController(null)

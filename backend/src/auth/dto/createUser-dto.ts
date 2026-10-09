@@ -3,7 +3,11 @@ import { z } from 'zod';
 export const createUserSchema = z.object({
   userName: z
     .string()
-    .min(5, { error: 'Username must be at least 5 characters long' }),
+    .min(5, { error: 'Username must be at least 5 characters long' })
+    .regex(
+      /^[A-Za-z\s'-]+$/,
+      'Only letters, spaces, hyphens and apostrophes allowed',
+    ),
   email: z.string().email({ error: 'Invalid email address' }),
   password: z
     .string()

@@ -1,7 +1,7 @@
 import z from "zod";
 import { baseUserSchema} from "./createUser";
 const baseCompanySchema = z.object({
-  name: z.string().min(1, { error: 'Name is required' }),
+  name: z.string().min(1, { error: 'Name is required' }).regex(/^[A-Za-z\s'-]+$/, "Only letters, spaces, hyphens and apostrophes allowed"),
   description: z.string().min(1, { error: 'Description is required' }),
   website: z.string().url({ error: 'Website is required' }),
   address: z.string().min(1, { error: 'Address is required' }),

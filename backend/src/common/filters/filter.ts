@@ -6,8 +6,17 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { InputException } from '../exceptions';
-import { Response } from 'express';
+import { Response, Request } from 'express';
+const DEFAULT_CODES: Record<number, string> = {
+  400: 'BAD_REQUEST',
+  401: 'UNAUTHORIZED',
+  403: 'FORBIDDEN',
+  404: 'NOT_FOUND',
+  409: 'CONFLICT',
+  422: 'UNPROCESSABLE',
+  429: 'TOO_MANY_REQUESTS',
+  503: 'SERVICE_UNAVAILABLE',
+};
 
 @Catch()
 export class AllExceptionFilter implements ExceptionFilter {
@@ -15,6 +24,7 @@ export class AllExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
+    const req = ctx.getRequest<Request>();
     const stack = exception instanceof Error ? exception.stack : 'Unknown';
     const status =
       exception instanceof HttpException
@@ -26,14 +36,16 @@ export class AllExceptionFilter implements ExceptionFilter {
         : typeof exception === 'string'
           ? exception
           : 'Internal Server Error';
-    if (exception instanceof InputException) {
-      this.logger.warn(message);
+    const line = `${req.method} ${req.originalUrl} -> ${status} : ${message}`;
+    if (status >= 500) {
+      this.logger.error(line, stack);
     } else {
-      this.logger.error(message, stack);
+      this.logger.warn(line);
     }
     response.status(status).json({
       statusCode: status,
       message,
+      code: DEFAULT_CODES[status] ?? 'Internal Server error',
     });
   }
 }

@@ -14,7 +14,7 @@ import { Button } from "../ui/button";
 import Link from "next/link";
 import { Eye, EyeClosed } from "lucide-react";
 import { toast } from "sonner";
-import { config } from "@/lib/utils";
+import { config } from "@/lib/config";
 import { logger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
 
@@ -80,14 +80,12 @@ export default function SigninForm() {
         signal: controller.signal
       })
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message)
+        const statusText = res.statusText;
+        throw new Error(statusText)
       }
       const responseData = await res.json();
       console.log(responseData)
-      router.push(`/dashboard/${responseData.userId}`)
-      toast.success("Signed in successfully");
-
+      router.push(`/dashboard`)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "An error occurred");
       logger.error(error)
@@ -207,7 +205,7 @@ export default function SigninForm() {
         <p className="text-center text-sm text-neutral-500 mt-6">
           Don't have an account?{" "}
           <a
-            href="/sign-up"
+            href="/create-company"
             className="font-medium text-neutral-900 hover:underline"
           >
             Create one
